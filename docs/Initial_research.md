@@ -3,15 +3,15 @@ Title: Clustering and classification of application's error messages for offline
 
 Abstract 
 --------------
-*#PERSON Marek Bardoński #2ND*
-
-General usage: problem description, proposed solution
+Small technical problems with basic applications and operating system itself are currently a major blocker for non-technical people to use a linux-based operating systems. The paper provide an initial research on usage of machine learning algorithms to cluster similar problems (with the same solution) that mulitiple user struggle with into a bucket and propagate an already existing and confirmed solution found by a few of them to the rest. 
 
 Introduction, motivation
 --------------------------
-The idea of DPCS was created during a meeting of Canonical managers with University of Warsaw Research Group Board. After discussion about different machine learning projects, DPCS was selected as a problem that is interesting to solve and have a possibility to help as much people as possible.
+The idea of DPCS was created during a meeting of Canonical managers with the University of Warsaw Research Group Board in 2015. After discussion about different machine learning projects, DPCS was selected as a problem that is interesting to solve and have a possibility to make a real big impact on milions of people currently using Ubuntu as their primary operating system.
 
-The main goal is to integrate DPCS into public Ubuntu release.
+The main goal is to integrate DPCS into public Ubuntu release as a default-enabled standard console plugin with an offline model, periodically updated via the standard package updates.
+
+For those who will decide to be more involved, it will work as an online agent having more up-to-date database in exchange of analyzing user's console input / output and expanding the current knowledge of problems and solution.
 
 Algorithms overview  
 --------------------------
