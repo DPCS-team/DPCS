@@ -38,25 +38,14 @@ The other methods of assessment worth considering are:
 * Counting users resigning from using given version of solver (but this may not be possible with alpha version)
 
 
-Techincal overview 
+Techincal overview
 --------------------------
-*#PERSON Mateusz Susik #2ND*
 
-1) Server
+The DPCS is composed in a server/client architecture. A simple http server is receiving and sending JSON queries, for the initial purposes a single machine was enough. Daily in the evening, a clustering algorithm is run through the database of problems, assigning them to proper categories.
 
-a) Communication with client, security - detecting spam, loops, attacks, etc
+The development of the client was more complicated. We have considered an apporach to automatically listen on all terminals for the programs that have crashed with error, but decided to give up because of the instrusiveness and technical challenges. 
 
-b) HDFS, canonical, Spark
-
-c) Cleaning the database
-
-2) Client
-
-a) REST, problems with reading from terminals
-
-b) offline classification
-
-3) Pipeline description
+One of the requirement for the client is to work in an offline mode. That's necessary for securing users privacy, that their data is not being send outside without their explicit permission. We have resolved it by having two types of users. Most of them would have an offline model on their computer, that's created by the data collected from the smaller part that have decided to send their data for a more accurate diagnosis on the server.
 
 
 
