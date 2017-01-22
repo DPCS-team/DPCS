@@ -3,15 +3,24 @@ Title: Clustering and classification of application's error messages for offline
 
 Abstract 
 --------------
-Small technical problems with basic applications and operating system itself are currently a major blocker for non-technical people to use a linux-based operating systems. The paper provide an initial research on usage of machine learning algorithms to cluster similar problems (with the same solution) that mulitiple user struggle with into a bucket and propagate an already existing and confirmed solution found by a few of them to the rest. 
+Small technical problems with basic linux applications and the operating system itself are currently a major blocker for non-technical people to use a linux-based operating systems. The paper provide an initial research on usage of machine learning algorithms to cluster similar problems (with the same solution) that mulitiple user struggle with into a bucket and propagate an already existing and confirmed by the community solution found by a few of them to the rest. 
 
-Introduction, motivation
+Introduction
 --------------------------
-The idea of DPCS was created during a meeting of Canonical managers with the University of Warsaw Research Group Board in 2015. After discussion about different machine learning projects, DPCS was selected as a problem that is interesting to solve and have a possibility to make a real big impact on milions of people currently using Ubuntu as their primary operating system.
+One of the common problems with using linux-based operation system is very limited time of developers that create applications and system compnents. They are usually working on them as a community service job, after hours or in order to gain experience with programming. The consequence of that is long time between catching a bug and releasing a patch. A great example is one of the author's aplication - Clicompanion - that had a simple critical problem causing it to crash on start for more than 4 years (2012 - 2016) - and still being downloaded on average by 1 person every day.
 
-The main goal is to integrate DPCS into public Ubuntu release as a default-enabled standard console plugin with an offline model, periodically updated via the standard package updates.
+Many times, more experienced people are fixing applications itself, using simple scripts or patches. However, due to the previous problems, reviewing them and integrating with a specified application is a slow and problematic process. 
 
-For those who will decide to be more involved, it will work as an online agent having more up-to-date database in exchange of analyzing user's console input / output and expanding the current knowledge of problems and solution.
+In this paper, we are going to adopt a novel machine learning techniqes to make this process automatic, more community-driven and easier, by:
+
+* Collecting anonymized and voluntary provided information about the problems that users are having.
+* Clustering problems into buckets of similar problems using Affinity Propagation algorithm.
+* Creating an incremental, offline neural network model that can match new problems with existing ones and retrieve solutions.
+* Analysing users commands after error in order to detect a possible solution. 
+* Providing a platform for manual soluction inserting by volunteers.
+
+
+This is a significant ML application contribution, with the possibility of enabling more people to use free operating system and reducing the entry level investment for people who want to start learning how to use a computer.
 
 Algorithms overview  
 --------------------------
@@ -252,6 +261,17 @@ specific circumstances
 ­ Solution: DPCS learns which configurations cause the bug and informs developers
 about them
 ­ for whom: developers of packages
+
+
+Motivation and the production deployment plan
+---------------------------------------------
+
+The idea of DPCS was created during a meeting of Canonical managers with the University of Warsaw Machine Learning Research Group (UWMLRG) Board in 2015. After discussion about different machine learning projects, DPCS was selected as a problem that is interesting to solve and have a possibility to make a real big impact on milions of people currently using Ubuntu as their primary operating system.
+
+The DPCS was the main project for the UWMLRG during the academic year of 2015/2016, where most of the contributions and ideas for the initial research have come form.
+
+The main goal is to integrate the DPCS into public Ubuntu releases as a default-enabled standard console plugin with an offline classification model, periodically updated via the standard package updates. For those who will decide to be more involved, they will be able to select the online mode. In the online mode, the classification input will be sent to the server for a classification on a larger model + clustering for finding new issues. This mode will be expanding the current knowledge of problems.
+
 
 Similar projects
 -------------------------- 
