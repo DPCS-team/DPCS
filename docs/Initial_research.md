@@ -17,7 +17,7 @@ In this paper, we are going to adopt a novel machine learning techniqes to make 
 * Clustering problems into buckets of similar problems using Affinity Propagation algorithm.
 * Creating an incremental, offline neural network model that can match new problems with existing ones and retrieve solutions.
 * Analysing users commands after error in order to detect a possible solution. 
-* Providing a platform for manual soluction inserting by volunteers.
+* Providing a platform for manual solution inserting by volunteers.
 
 
 This is a significant ML application contribution, with the possibility of enabling more people to use free operating system and reducing the entry level investment for people who want to start learning how to use a computer.
