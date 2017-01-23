@@ -7,28 +7,24 @@ Small technical problems with basic linux applications and the operating system 
 
 Introduction
 --------------------------
-One of the common problems with using linux-based operation system is very limited time of developers that create applications and system compnents. They are usually working on them as a community service job, after hours or in order to gain experience with programming. The consequence of that is long time between catching a bug and releasing a patch. A great example is one of the author's aplication - Clicompanion - that had a simple critical problem causing it to crash on start for more than 4 years (2012 - 2016) - and still being downloaded on average by 1 person every day.
+One of the common problems with using linux-based operation system is very limited time of developers that create applications and system compnents. They are usually working on them as a community service job, after hours or in order to gain experience with programming. The consequence of that is long time between catching a bug and releasing a patch. A great example is one of the author's aplication - Clicompanion - that had a simple critical problem causing it to crash on start for more than 4 years (2012 - 2016) - and still being downloaded on average by 1 person everyday.
 
-Many times, more experienced people are fixing applications itself, using simple scripts or patches. However, due to the previous problems, reviewing them and integrating with a specified application is a slow and problematic process. 
+Many times, more experienced people are fixing applications itself, using simple scripts or patches. However, due to the previous problems, reviewing them and integrating with a specified application is a slow and problematic process. We decided to consider a simple solution as an environment-nondependent bash script containing no more than 50 lines, possibly requring administrator rights to execute. As a problem we consider a failure of execution of a program and up to last 50 lines of the progam output, including the error code, name of the program, and system configuration.
 
-In this paper, we are going to adopt a novel machine learning techniqes to make this process automatic, more community-driven and easier, by:
+In this paper, we are going to adopt a novel machine learning techniqes to make this process automatic, more community-driven and easier, by collecting anonymized and voluntary provided information about the problems that users are having, clustering problems into buckets of similar problems using the Affinity Propagation algorithm and creating an incremental, offline neural network model that can match new problems with existing ones.
 
-* Collecting anonymized and voluntary provided information about the problems that users are having.
-* Clustering problems into buckets of similar problems using Affinity Propagation algorithm.
-* Creating an incremental, offline neural network model that can match new problems with existing ones and retrieve solutions.
-* Analysing users commands after error in order to detect a possible solution. 
-* Providing a platform for manual solution inserting by volunteers.
+As an addition, non-intrusive tools were created to collect and retrieve solutions created by the community, to perform the experiments and publish the results of the work to broad audience. 
+
+For the initial research, we have selected two algorihms as the most promising in terms of computational power demand and quality of results. The first one is semi-supervised Affinity Propagation (AP) described in the "Text Clustering with Seeds Affinity Propagation" paper [src...] to be used for clustering the problems into buckets, and the second one is a classical neural network trained on pairs (error, bucket) created by the previous algorithm. 
 
 
-This is a significant ML application contribution, with the possibility of enabling more people to use free operating system and reducing the entry level investment for people who want to start learning how to use a computer.
-
-Algorithms overview  
+Clustering algorithm  
 --------------------------
-To perform initial testing, two algorihms was selected as the most promising.
 
-The first one is the Affinity Propagation algorithm - O(n log n) implementation - , to be used for clustering data received from insiders, from non-covered by Apport applications into separate "problems"
+As the main criteria for the clustering algorithm selection, we have considered near-linear speed of execution, processing structural information and automatic stop criterium. The AP algorithm is satisfying all of the three requirements. In the analysis below, the specific AP algorithm designed by Renchu Guan, et all. [src] will be described. 
 
-The second one is a classical Neural Network for classifing 'in production' an unknown problem into one of clusters created during previous step (or clusters representing Launchpad bugs).
+To prepare the data to be used by AP, each input sample was stripped of out stopwords and punctation and all letters was converted to lowercase. (...)
+
 
 Evaluating algorithm's efficiency
 ---------------------------------
@@ -47,7 +43,7 @@ The other methods of assessment worth considering are:
 * Counting users resigning from using given version of solver (but this may not be possible with alpha version)
 
 
-Techincal overview
+Platform overview
 --------------------------
 
 The DPCS is composed in a server/client architecture. A simple http server is receiving and sending JSON queries, for the initial purposes a single machine was enough. Daily in the evening, a clustering algorithm is run through the database of problems, assigning them to proper categories.
@@ -55,20 +51,6 @@ The DPCS is composed in a server/client architecture. A simple http server is re
 The development of the client was more complicated. We have considered an apporach to automatically listen on all terminals for the programs that have crashed with error, but decided to give up because of the instrusiveness and technical challenges. 
 
 One of the requirement for the client is to work in an offline mode. That's necessary for securing users privacy, that their data is not being send outside without their explicit permission. We have resolved it by having two types of users. Most of them would have an offline model on their computer, that's created by the data collected from the smaller part that have decided to send their data for a more accurate diagnosis on the server.
-
-
-
-Preprocessing 
---------------------------
-*#PERSON Hubert Tarasiuk*
-
-1) Normalization of system paths (~home), /opt/bin, /bin/ etc - heuristics
-
-2) lowercase, 's, timestamps, PII (emails, passwords) removal (library?)
-
-3) Optional translation
-
-4) Stopwords (?)
 
 
 Clustering 
@@ -262,6 +244,14 @@ specific circumstances
 about them
 ­ for whom: developers of packages
 
+Future experiments
+------------------
+
+- Algorithm: Analysing users commands after error in order to detect a possible solution. 
+- Platform: Providing a platform for manual solution inserting by volunteers.
+- Preprocessing: Normalization of system paths (~home), /opt/bin, /bin/ etc - heuristics
+- Preprocessing: Converting to lowercase, 's, timestamps, PII (emails, passwords) removal (library?)
+- Preprocessing: Translations of messages.
 
 Motivation and the production deployment plan
 ---------------------------------------------
@@ -272,33 +262,7 @@ The DPCS was the main project for the UWMLRG during the academic year of 2015/20
 
 The main goal is to integrate the DPCS into public Ubuntu releases as a default-enabled standard console plugin with an offline classification model, periodically updated via the standard package updates. For those who will decide to be more involved, they will be able to select the online mode. In the online mode, the classification input will be sent to the server for a classification on a larger model + clustering for finding new issues. This mode will be expanding the current knowledge of problems.
 
-
-Similar projects
--------------------------- 
-
-# Automatic problem solvers
-##### Red Hat Access - Red Hat Access: Diagnose and Red Hat Access: Analyze
-
-It can perform problem determination on error codes, stacktraces, and logs. 
-Red Hat Access: Analyze can perform log-file analysis using Red Hat servers.
-
-# Logs as source of data for machine learning
-##### Pulse
-Learns from log files and searches for anomalies.
-https://github.com/gophergala2016/Pulse
-
-##### Entropy
-Uses natural language processing for parsing logs.
-https://github.com/jbowles/entropy
-
-##### CLUEBOX: A Performance Log Analyzer for Automated Troubleshooting
-Uses machine learning and logs for automated troubleshooting of performance problems.
-https://www.usenix.org/legacy/event/wasl08/tech/full_papers/sandeep/sandeep_html/
-
-##### Automatic Log Analysis using Machine Learning
-Applies machine learning techniques to do automated log analysis. Compares several variants of clustering, artificial neural network algorithms and data preprocessing. 
-http://uu.diva-portal.org/smash/get/diva2:667650/FULLTEXT01.pdf
-
+This is a significant ML application contribution, with the possibility of enabling more people to use free operating systems and reducing the entry level investment for people who want to start learning how to use a computer. In turn, this will help with overcoming massive transition of workforce from manual jobs to IT sector, caused by great improvement of artifical inteligence.
 
 
 Bibliography
@@ -320,3 +284,7 @@ Bibliography
 [src9] http://arxiv.org/pdf/1405.4053v2.pdf
 
 [src10] http://arxiv.org/pdf/1507.07998v1.pdf
+
+[src11] Delbert Dueck; Brendan J. Frey (2007). Non-metric affinity propagation for unsupervised image categorization. Int'l Conf. on Computer Vision.
+
+[src12] Renchu Guan; Xiaohu Shi; Maurizio Marchese; Chen Yang; Yanchun Liang (2011). "Text Clustering with Seeds Affinity Propagation". IEEE Transactions on Knowledge & Data Engineering. 23 (4): 627–637. doi:10.1109/tkde.2010.144.
