@@ -3,95 +3,78 @@ Title: Clustering and classification of application's error messages for offline
 
 Abstract 
 --------------
-Small technical problems with basic linux applications and the operating system itself are currently a major blocker for non-technical people to use a linux-based operating systems. The paper provide an initial research on usage of machine learning algorithms to cluster similar problems (with the same solution) that mulitiple user struggle with into a bucket and propagate an already existing and confirmed by the community solution found by a few of them to the rest. 
+Small technical problems with basic linux applications and the operating system itself are currently a major blocker for non-technical people to use a linux-based operating systems. The paper provide an initial research on usage of machine learning algorithms to cluster similar problems (with the same solution) that multiple users are struggling with into a bucket and propagate an already existing and confirmed by the community solution found by a few of them to the rest. 
 
 Introduction
 --------------------------
-One of the common problems with using linux-based operation system is very limited time of developers that create applications and system compnents. They are usually working on them as a community service job, after hours or in order to gain experience with programming. The consequence of that is long time between catching a bug and releasing a patch. A great example is one of the author's aplication - Clicompanion - that had a simple critical problem causing it to crash on start for more than 4 years (2012 - 2016) - and still being downloaded on average by 1 person everyday.
+One of the common problems with using linux-based operation system is very limited time of developers that create applications and system components. They are usually working on them as a community service job, after hours or in order to gain experience with programming. The consequence of that is long time between catching a bug and releasing a patch. A great example is one of the author's application - Clicompanion - that had a simple critical problem causing it to crash on start for more than 4 years (2012 - 2016) - and still being downloaded on average by 1 person daily during this timeframe.
 
-Many times, more experienced people are fixing applications itself, using simple scripts or patches. However, due to the previous problems, reviewing them and integrating with a specified application is a slow and problematic process. We decided to consider a simple solution as an environment-nondependent bash script containing no more than 50 lines, possibly requring administrator rights to execute. As a problem we consider a failure of execution of a program and up to last 50 lines of the progam output, including the error code, name of the program, and system configuration.
+Many times, more experienced people are fixing applications itself, using simple scripts or patches. However, due to the previous problems, reviewing them and integrating with a specified application is a slow and problematic process. We decided to consider a simple solution as a bash script without environment dependencies containing no more than 50 lines, possibly requiring administrator rights to execute. As a problem we consider a failure of execution of a program and up to last 50 lines of the program output, including the error code, name of the program, and system configuration.
 
-In this paper, we are going to adopt a novel machine learning techniqes to make this process automatic, more community-driven and easier, by collecting anonymized and voluntary provided information about the problems that users are having, clustering problems into buckets of similar problems using the Affinity Propagation algorithm and creating an incremental, offline neural network model that can match new problems with existing ones.
+In this paper, we are going to adopt a novel machine learning techniques to make this process automatic, more community-driven and easier, by collecting anonymized and voluntary provided information about the problems that users are having, clustering problems into buckets of similar problems using the Affinity Propagation algorithm and creating an incremental, offline neural network model that can match new problems with existing ones.
 
-As an addition, non-intrusive tools were created to collect and retrieve solutions created by the community, to perform the experiments and publish the results of the work to broad audience. 
+As an addition, non-intrusive tools were created to collect and retrieve solutions created by the community, to perform the experiments and publish the results of the work to broad audience.
 
-For the initial research, we have selected two algorihms as the most promising in terms of computational power demand and quality of results. The first one is semi-supervised Affinity Propagation (AP) described in the "Text Clustering with Seeds Affinity Propagation" paper [src...] to be used for clustering the problems into buckets, and the second one is a classical neural network trained on pairs (error, bucket) created by the previous algorithm. 
+For the initial research, we have selected two algorithms as the most promising in terms of computational power demand and quality of results. The first one is a semi-supervised version of Affinity Propagation (AP) described in the "Text Clustering with Seeds Affinity Propagation" paper [src...] to be used for clustering of problems into buckets, and the second one is a classical neural network trained on pairs (error, bucket) created by the previous algorithm. 
+	
+
+
+
+
+Data preprocessing
+--------------------------
+
+The same preprocessing techniques was used to convert raw error log into  feature vectors for both clustering and classification algorithms. Server gets the report with several fields containing the name and version of crashed application, exit code, system version information - kernel and system version, installed modules - and stderr output consisting of several lines of text.
+
+
+Each input sample was stripped of out stop-words, punctuation and all letters was converted to lowercase. Then, two vectors of bigrams was created – one with less important features, for which we have considered a whole output of the program, and more important with application name, arguments and as a separate fields error code, minor and major application version.
 
 
 Clustering algorithm  
 --------------------------
 
-As the main criteria for the clustering algorithm selection, we have considered near-linear speed of execution, processing structural information and automatic stop criterium. The AP algorithm is satisfying all of the three requirements. In the analysis below, the specific AP algorithm designed by Renchu Guan, et all. [src] will be described. 
+As the main criteria for the clustering algorithm selection, we have considered speed of execution, processing structural information and ability to predict the number of clusters. The AP algorithm is satisfying all of the three requirements. In the analysis below, the specific AP algorithm designed by Renchu Guan, et all. [src] will be considered. 
 
-To prepare the data to be used by AP, each input sample was stripped of out stopwords and punctation and all letters was converted to lowercase. (...)
+That prepared sets of each vector for each error was used for a nightly clustering using the AP algorithm.
 
-
-Evaluating algorithm's efficiency
----------------------------------
-There are following issues which must be consider:
-We probably want our models to have (and use) option 'don't know the solution' when there are low chances of success. We may have very little test data (for example if model solution can be asses only by human). Wrong decisions may have different scale of consequences – we don’t want to crash computer of our user.
-
-Taking it into account it may be necessary to: 
-* Ask alpha users to give us more feedback than 'this (do not) solved my problem'. It may be possible because some of those will be people somehow interested in our work.
-* Prepare set of examples for which we would establish good solutions and than check our algorithms on those.
-* If our solvers will work not only by suggesting solutions but implementing it, than we could prepare some automatic tests.
-* The first of solutions seems easiest (although we probably should do at least some basic tests before giving solver to any user).
+Classification algorithm
+--------------------------
 
 
-The other methods of assessment worth considering are:
-* Counting time from giving solution to the user to his (positive or negative) evaluation of results. The shortest time means that solution (even if wrong) was more understandable.
-* Counting users resigning from using given version of solver (but this may not be possible with alpha version)
 
 
 Platform overview
 --------------------------
 
-The DPCS is composed in a server/client architecture. A simple http server is receiving and sending JSON queries, for the initial purposes a single machine was enough. Daily in the evening, a clustering algorithm is run through the database of problems, assigning them to proper categories.
+The DPCS is composed in a server/client architecture. A simple http server is receiving and sending JSON queries, for the initial research a single machine is enough. Daily during night, a clustering algorithm initiated by a CRON job is run through the database of problems, assigning them to proper categories.
 
-The development of the client was more complicated. We have considered an apporach to automatically listen on all terminals for the programs that have crashed with error, but decided to give up because of the instrusiveness and technical challenges. 
+The client is a terminal plugin applied to the Clicompanion tool. Clicompanion is an application designed for people learning how to use console, so a natural target group for the system. It contain an offline neural network model, trained on data from  
 
 One of the requirement for the client is to work in an offline mode. That's necessary for securing users privacy, that their data is not being send outside without their explicit permission. We have resolved it by having two types of users. Most of them would have an offline model on their computer, that's created by the data collected from the smaller part that have decided to send their data for a more accurate diagnosis on the server.
 
+We have considered an approach to automatically listen on all terminals for the programs that have crashed with error, but decided to give up because of the intrusiveness and technical challenges.
 
-Clustering 
---------------------------
-Most promising features selected for analysis: word count, word bigram(using TF- IDF and excluding stopwords), package name, package version, version of linux distribution and non-standard packages list.[src5]
 
-Main algorithm
 
-2) Affinity propagation [src1]
-
-Supporting algorithms
-
-To solve our problem of classifying crashes, first we have to think how represent them in our machine learning algorithm. Server gets the report with several fields containing:
-1) The name and version of crashed application, along with exit code
-2) System version information (kernel and system version, installed modules)
-3) stderr output, consisting of several lines of text
-
-First two are easy to feed to the classifier, as they are primarily numbers or proper names (libraries and applications), but the third, as important as them, is just a variable length blob of text. This is where in my opinion paragraph2vec (extension of word2vec) algorithm comes to use.
-
-The idea is to use paragraph2vec algorithm [src9] [src10] on text data, then extend the vector using information from 1) and 2) and then use constrained spectral clustering to obtain labels.
-
-A comparison [src7] shows that the spectral analysis is currently one of the best clustering algorithms, and with constrained SC [src8] we can incorporate prior knowledge. Our data is high-dimensional, but due to the use of spectral clustering it shouldn't be much of a problem (PCA step). We will probably be forced to modify the original approach described in the paper, since our task will require providing “cannotlink constraints” (as opposed to “must-link constrains” described in [src8], indicating that two elements
-are in the same cluster).
-
-Paragraph2vec (doc2vec) is already implemented in gensim package (python), I couldn't find any python constrained spectral clustering algorithm, so it is possible we'll have to implement it ourselves.
 
 Heuristics
 ----------
 
+In order to exclude a lot of errors coming from simple mistype of the application name or parameter, we have integrated an already existing tool – Thefuck - to automatically recognize, when an user will make a simple mistake. It's a method that we use to clean our enquires before we feed them to the rest of pipeline [src4]
 
-Thefuck is a tool that automatically recognize, when an user make a mistake writting the script name. It's a method that we use to clean our enquires before we feed them to the NN classifier.[src4]
 
-Short summary of Windows Error Reporting system (WER) based on [src3]
+Existing work 
+-------------
+
+Windows Error Reporting system (WER) based on [src3]
 
 It is based on citations from the original article and shows a general idea behind the system. WER serves a slightly different purpose than our project. Its main goal is to help debugging
 Microsoft products by gathering error data from users.
 
 WER aggregates error reports that are likely caused by the same bug into buckets. The goal of the bucketing algorithm is to maintain a property: one bug per bucket and one bucket per bug. To achieve this there are two stages of the bucketing:
-● labelling ­ happens on users machine, errors are labeled (assigned to buckets) based on basic data avaliable at the client. Its goal is to find the general cause of the error.
+● labelling ¬ happens on users machine, errors are labeled (assigned to buckets) based on basic data avaliable at the client. Its goal is to find the general cause of the error.
 
-● classifying ­ happens on WER service, errors are placed in new buckets based on further crash data analysis. Its goal is to analyze the labeled error data more deeply
+● classifying ¬ happens on WER service, errors are placed in new buckets based on further crash data analysis. Its goal is to analyze the labeled error data more deeply
 and find a specific cause of the problem.
 
 When an error occurs on user machine, client code automatically collects information and creates an error report. Basic report consists only of bucket identifier.
@@ -99,7 +82,7 @@ If a solution to the problem is already known, WER provides the client with URL 
 dump and the configuration of the faulting system). If further data is required, WER can collect full memory dump, memory dumps from related programs, related files or other data
 queried from the reporting system.
 
-WER enables statistics­based­debugging ­ all error data is stored in a single database so programmers can mine the database to improve debugging. Programmers can sort the buckets and debug the bucket with most report, can find a function that occurs in most buckets and debug that function. It also helps with finding causes which are not immediately
+WER enables statistics¬based¬debugging ¬ all error data is stored in a single database so programmers can mine the database to improve debugging. Programmers can sort the buckets and debug the bucket with most report, can find a function that occurs in most buckets and debug that function. It also helps with finding causes which are not immediately
 obvious from memory dumps.
 
 Short summary of bucketing algorithms
@@ -107,14 +90,14 @@ Algorithms are based on collection of hueristics. Expanding heuristics increase 
 should not create new buckets for the same bug and condensing heuristics should not put two different bugs into one bucket.
 The idea is to classify the records as well as possible in order to save programmers time and maximize their effectiveness in debugging.
 
-Client­Side Bucketing (Labeling)
+Client¬Side Bucketing (Labeling)
 
 [FIG4]
 
 It is run on the client when an error report is generated. The goal is to produce an unique label based on local information that is likely to align with other reports caused by the same bug. In most cases, the only data sent to WER servers is a bucket label.
 
 Primary labeling heuristics generate a bucket label from faulting program, module and offset of the program counter within the module.
-For example, user­mode crashed are classified according to the parameters:
+For example, user¬mode crashed are classified according to the parameters:
 ● application name
 ● apllication version
 ● module name
@@ -122,47 +105,21 @@ For example, user­mode crashed are classified according to the parameters:
 ● offset into module
 Additional heuristics are generated for example when an error is caused by unhandled program exception.
 Most of the labeling heuristcs are expanding heuristics intended to put separate bugs into distinct buckets. For example, the hang_wait_chain (L10) heuristic walks the cain of threads
-waiting for synchronization objects held by threads, starting from the user­input thread. If a root thread is found, the error is report as a hang originating with root thread.
+waiting for synchronization objects held by threads, starting from the user-input thread. If a root thread is found, the error is report as a hang originating with root thread.
 
 The few condensing heuristics were derived emipirically from common cases when a single bug produced many buckets. For example, the unloaded_module (L13) heuristic condenses
-all errors where a module has been unloaded prematurely due to a reference counting bug. Server­Side Bucketing (Classifying)
+all errors where a module has been unloaded prematurely due to a reference counting bug. Server¬Side Bucketing (Classifying)
 
 [FIG5]
 
-The server­side bucketing heuristics are codified in !analyze (an extenstion to Windows Debugger). There were about 500 heuristics dervied empirically.
-The most important classifying heuristics (C1 ­ C5) are a part of an algorithm that analyzes the memory dump to determine which thread context and stack frame most likely caused the
+The server¬side bucketing heuristics are codified in !analyze (an extenstion to Windows Debugger). There were about 500 heuristics dervied empirically.
+The most important classifying heuristics (C1 ¬ C5) are a part of an algorithm that analyzes the memory dump to determine which thread context and stack frame most likely caused the
 error.
 There is a number of heuristics to filter out error reports that are unlikely to be debugged (e.g bad memory, misdirected DMA, DMA from a faulty device).
 
-As an another example, kernel dumps are tagged if they contain evidence of known root kits (C11), out­of­date­drivers (C12), drivers known to corrupt the kernel heap (C13) or hardware
+As an another example, kernel dumps are tagged if they contain evidence of known root kits (C11), out¬of¬date¬drivers (C12), drivers known to corrupt the kernel heap (C13) or hardware
 known to cause memory or computational erros (C14 and C15).
 
-
-Classification 
---------------------------
-
-[LINKS]
-
-1) Neural networks
-
-Supporting algorithms
-
-2) Multiclass logistic regression
-
-
-Solution matching approaches
---------------------------
-Stack overflow crawler
-
-## Problem summary
-During a meeting with Wojciech Jaworski PhD, we got an idea that it may be really helpful to create a Stack Overflow crawler, that will try to match log parts from user's questions with captured log.
-
-1. Try to find automatically answer
-2. Help with logs clustering
-
-## Useful links
-* https://api.stackexchange.com/docs - API of AskUbuntu among others.
-* https://archive.org/details/stackexchange - 500 MB of AskUbuntu data.
 
 ## Proposed solution
 Because API implements throttles, I don't see possible use for clustering in scalable system. On the other hand, there exists data dump with number of possible applications. Given error messages and labels in Stack Exchange dump, it seems easy to validate clustering algorithms with this large amount of data. There is also place for heuristic algorithms looking for the same key words - similarly to Mateusz's approach - and apply accepted answer.
@@ -217,41 +174,63 @@ Examples
 Usecases 
 
 User doesn’t have required software:
-­ example: while coding software engineer needs python3 but has python2.
-­ solution: install required software
-­ for whom: all ubuntu users
+¬ example: while coding software engineer needs python3 but has python2.
+¬ solution: install required software
+¬ for whom: all ubuntu users
 2. User have some problem with hardware
-­ example: user swap is overloaded
-­ solution: kill process which takes more memory than others
-­ for whom: user who never heard about swap, kernel or memory
+¬ example: user swap is overloaded
+¬ solution: kill process which takes more memory than others
+¬ for whom: user who never heard about swap, kernel or memory
 3. User make some typo in console
-­ example: “sudo atp­get” instead of “sudo apt­get”
-­ solution: run command again without typo
-­ for whom: all users
+¬ example: “sudo atp¬get” instead of “sudo apt¬get”
+¬ solution: run command again without typo
+¬ for whom: all users
 4. Update failed
-­ example: repository address changed and computer doesn’t know new address
-­ solution: find new address
-­ for whom: all users
+¬ example: repository address changed and computer doesn’t know new address
+¬ solution: find new address
+¬ for whom: all users
 5. Security problems
-­ example: system was infected with malware
-­ solution: remove the malware automatically or inform user about suspicious behavior
+¬ example: system was infected with malware
+¬ solution: remove the malware automatically or inform user about suspicious behavior
 and let him decide
-­ for whom:
+¬ for whom:
 6. Regressions and new bugs in new version of packages
-­ Example: new version of some package has a bug which occurs only in some
+¬ Example: new version of some package has a bug which occurs only in some
 specific circumstances
-­ Solution: DPCS learns which configurations cause the bug and informs developers
+¬ Solution: DPCS learns which configurations cause the bug and informs developers
 about them
-­ for whom: developers of packages
+¬ for whom: developers of packages
+
+
+Results 
+-----------------------------------
+
+An initial set of 100 partly-artificial examples of 20 problems was created by looking at the popular problems from StackOverflow website. These problems are: <LIST OF PROBLEMS> The clustering algorithm was able to correctly cluster <> problems with the <> Davies-Bouldin score. After that, a classification algorithm was trained on this data and received <>% accuracy.
+
+After successful initial verification, a test on approx. 1000 user have been performed. The initial model have been trained on the previously described initial-set. The users were invited to join testing via Facebook adverts targeted to people interested in learning linux (followers of fanpages for linux beginners). We have received <> queries to the server and <> reports that the problem wasn’t solved. Additionally in <> case, the offline model had too low confidence to provide a solution.
+
+
+The other methods of assessment worth considering are:
+* Counting time from giving solution to the user to his (positive or negative) evaluation of results. The shortest time means that solution (even if wrong) was more understandable.
+* Counting users resigning from using given version of solver (but this may not be possible with alpha version)
+
+
 
 Future experiments
 ------------------
 
-- Algorithm: Analysing users commands after error in order to detect a possible solution. 
+- Algorithm: Analyzing users commands after error in order to detect a possible solution. 
 - Platform: Providing a platform for manual solution inserting by volunteers.
 - Preprocessing: Normalization of system paths (~home), /opt/bin, /bin/ etc - heuristics
 - Preprocessing: Converting to lowercase, 's, timestamps, PII (emails, passwords) removal (library?)
 - Preprocessing: Translations of messages.
+- Preprocessing: Using TF-IDF over bigrams.
+- Clustering: Including system configuration (versions of every installed package).
+- Clustering: Usage of paragraph2vec (extension of doc2vec).
+- Clustering: Usage of spectral clustering.
+- Data collection: Stack overflow crawler.
+- Data collection: https://api.stackexchange.com/docs + https://archive.org/details/stackexchange - 500 MB of AskUbuntu data.
+
 
 Motivation and the production deployment plan
 ---------------------------------------------
@@ -288,3 +267,4 @@ Bibliography
 [src11] Delbert Dueck; Brendan J. Frey (2007). Non-metric affinity propagation for unsupervised image categorization. Int'l Conf. on Computer Vision.
 
 [src12] Renchu Guan; Xiaohu Shi; Maurizio Marchese; Chen Yang; Yanchun Liang (2011). "Text Clustering with Seeds Affinity Propagation". IEEE Transactions on Knowledge & Data Engineering. 23 (4): 627–637. doi:10.1109/tkde.2010.144.
+
