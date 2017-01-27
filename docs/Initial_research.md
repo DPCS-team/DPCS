@@ -28,14 +28,16 @@ Another solution is provided by Red Hat, named Red Hat Analyze / Diagnoze. It al
 
 The other usecase of this system is to scan a Tomcat, JBoss, or Python log file and try to understand a reason of the failure - and provide a solution if the problem is trivial. Unfortunatelly, details about the Red Hat Analyze / Diagnoze system implementation are a property of the Red Hat Inc. [13].
 
-
 Data preprocessing
 --------------------------
 
-The same preprocessing techniques was used to convert raw error log into  feature vectors for both clustering and classification algorithms. Server gets the report with several fields containing the name and version of crashed application, exit code, system version information - kernel and system version, installed modules - and stderr output consisting of several lines of text.
+The same preprocessing techniques was used to convert raw error log into feature vectors for both clustering and classification algorithms. The error log is a set of 8 values: name, runtime arguments and version of the crashed application, exit code, kernel and distribution version, installed packages in the system and stderr output consisting of several lines of text. We have assumed the apt package manager and standard debian packages to be used on the system, as the most popular ones. 
 
+The first 5 informantions don't need any preprocessing. They are inserted as a string / numerical value into the feature vector directly. The installed packages divided into the TOP200 popular packages (by Debian popular contest application) and the rest, and only the first group have been considered in order to reduce compuational expensivness of the clustering. [15] Then, a 200 binary vector have been created, where each column is representing one of the TOP200 packages, and the value inside is a version instaled on the system.
 
-Each input sample was stripped of out stop-words, punctuation and all letters was converted to lowercase. Then, two vectors of bigrams was created – one with less important features, for which we have considered a whole output of the program, and more important with application name, arguments and as a separate fields error code, minor and major application version.
+The stderr output, the most important information along with name and version of crashed application, was stripped of out stop-words, punctuation and all letters was converted to lowercase. Then, a vector of bigrams have been created out of it.
+
+In order to comply with the selected algorithm requirements, two vectors of features was created – one with less important features, for which we have considered a whole output of the program bigrams and installed packages on the system, and one with more important - application name, runtime arguments, version, last 5 lines of output bigrams, distribution and kernel versions and exit code.
 
 
 Clustering algorithm  
@@ -214,3 +216,5 @@ Bibliography
 [13] https://access.redhat.com/articles/445443
 
 [14] TODO: Write an article about the Clicompanion problem.
+
+[15] Debian popular vote http://popcon.debian.org/main/by_vote
