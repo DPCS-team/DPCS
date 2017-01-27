@@ -28,6 +28,8 @@ Another solution is provided by Red Hat, named Red Hat Analyze / Diagnoze. It al
 
 The other usecase of this system is to scan a Tomcat, JBoss, or Python log file and try to understand a reason of the failure - and provide a solution if the problem is trivial. Unfortunatelly, details about the Red Hat Analyze / Diagnoze system implementation are a property of the Red Hat Inc. [13].
 
+Another projects are related to log processing only: Pulse - learns from log files and searches for anomalies. [16] Entropy - Uses natural language processing for parsing logs. [17] Clusebox - machine learning over logs for automated troubleshooting of performance problems. [18] There is also a previous work available, that applies machine learning techniques to do automated log analysis. Compares several variants of clustering, artificial neural network algorithms and data preprocessing. [19]
+
 Data preprocessing
 --------------------------
 
@@ -218,3 +220,11 @@ Bibliography
 [14] TODO: Write an article about the Clicompanion problem.
 
 [15] Debian popular vote http://popcon.debian.org/main/by_vote
+
+[16] https://github.com/gophergala2016/Pulse 
+
+[17] https://github.com/jbowles/entropy
+
+[18] https://www.usenix.org/legacy/event/wasl08/tech/full_papers/sandeep/sandeep_html/
+
+[19] http://uu.diva-portal.org/smash/get/diva2:667650/FULLTEXT01.pdf
