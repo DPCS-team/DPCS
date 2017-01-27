@@ -7,7 +7,7 @@ Small technical problems with basic linux applications and the operating system 
 
 Introduction
 --------------------------
-One of the common problems with using linux-based operation system is very limited time of developers that create applications and system components. They are usually working on them as a community service job, after hours or in order to gain experience with programming. The consequence of that is long time between catching a bug and releasing a patch. A great example is one of the author's application - Clicompanion - that had a simple critical problem causing it to crash on start for more than 4 years (2012 - 2016) - and still being downloaded on average by 1 person daily during this timeframe.
+One of the common problems with using linux-based operation system is very limited time of developers that create applications and system components. They are usually working on them as a community service job, after hours or in order to gain experience with programming. The consequence of that is long time between catching a bug and releasing a patch. A great example is one of the author's application - Clicompanion - that had a simple critical problem causing it to crash on start for more than 4 years (2012 - 2016) - and still being downloaded on average by 1 person daily during this timeframe. [14]
 
 Many times, more experienced people are fixing applications itself, using simple scripts or patches. However, due to the previous problems, reviewing them and integrating with a specified application is a slow and problematic process. We decided to consider a simple solution as a bash script without environment dependencies containing no more than 50 lines, possibly requiring administrator rights to execute. As a problem we consider a failure of execution of a program and up to last 50 lines of the program output, including the error code, name of the program, and system configuration.
 
@@ -15,10 +15,18 @@ In this paper, we are going to adopt a novel machine learning techniques to make
 
 As an addition, non-intrusive tools were created to collect and retrieve solutions created by the community, to perform the experiments and publish the results of the work to broad audience.
 
-For the initial research, we have selected two algorithms as the most promising in terms of computational power demand and quality of results. The first one is a semi-supervised version of Affinity Propagation (AP) described in the "Text Clustering with Seeds Affinity Propagation" paper [src...] to be used for clustering of problems into buckets, and the second one is a classical neural network trained on pairs (error, bucket) created by the previous algorithm. 
+For the initial research, we have selected two algorithms as the most promising in terms of computational power demand and quality of results. The first one is a semi-supervised version of Affinity Propagation (AP) described in the "Text Clustering with Seeds Affinity Propagation" paper [12] to be used for clustering of problems into buckets, and the second one is a classical neural network trained on pairs (error, bucket) created by the previous algorithm. 
 	
+Related work
+--------------------------
 
+The existing work in the area is mostly focused on heuristic. The Windows Error Reporting system (WER) serves a slightly different purpose than our project. Its main goal is to help debugging Microsoft products by gathering error data from users. WER aggregates error reports that are likely caused by the same bug into buckets. The goal of the bucketing algorithm is to maintain a property: one bug per bucket and one bucket per bug. It's using two stages. The first one named labelling happens on the users machine. Errors are assigned to buckets based on basic data avaliable at the client. Its goal is to find the general cause of the error. The second stage, clustering, is executed on the server. Errors are placed in new buckets based on further crash data analysis. Its goal is to analyze the labeled error data more deeply and find a specific cause of the problem. Both stages are using heuristics. [3]
 
+Our system have similar construction, but the main difference is that we are going one step ahead and focusing on instantly providing a solution, while Microsoft's focus in on providing informations to help professional programmers to debug and resolve the problem. Additionally, WER is much more intrusive. It can collect full memory dump, memory dumps from related programs, related files or other data queried from the reporting system. The WER system is propiertary and there is no detailed analyzis available. [3]
+
+Another solution is provided by Red Hat, named Red Hat Analyze / Diagnoze. It also is using two modes. The first one - Analyze - it's analysing a single file for symptoms of error, and the second one - Diangoze - is sending a file, directory or plain text to being analyzed by the server. One of their main purposes is to automatically investigate kernel crashes to reduce time spent by their supporting engineers on analyzing a help request. [13]
+
+The other usecase of this system is to scan a Tomcat, JBoss, or Python log file and try to understand a reason of the failure - and provide a solution if the problem is trivial. Unfortunatelly, details about the Red Hat Analyze / Diagnoze system implementation are a property of the Red Hat Inc. [13].
 
 
 Data preprocessing
@@ -55,76 +63,10 @@ One of the requirement for the client is to work in an offline mode. That's nece
 We have considered an approach to automatically listen on all terminals for the programs that have crashed with error, but decided to give up because of the intrusiveness and technical challenges.
 
 
-
-
 Heuristics
 ----------
 
 In order to exclude a lot of errors coming from simple mistype of the application name or parameter, we have integrated an already existing tool – Thefuck - to automatically recognize, when an user will make a simple mistake. It's a method that we use to clean our enquires before we feed them to the rest of pipeline [src4]
-
-
-Existing work 
--------------
-
-Windows Error Reporting system (WER) based on [src3]
-
-It is based on citations from the original article and shows a general idea behind the system. WER serves a slightly different purpose than our project. Its main goal is to help debugging
-Microsoft products by gathering error data from users.
-
-WER aggregates error reports that are likely caused by the same bug into buckets. The goal of the bucketing algorithm is to maintain a property: one bug per bucket and one bucket per bug. To achieve this there are two stages of the bucketing:
-● labelling ¬ happens on users machine, errors are labeled (assigned to buckets) based on basic data avaliable at the client. Its goal is to find the general cause of the error.
-
-● classifying ¬ happens on WER service, errors are placed in new buckets based on further crash data analysis. Its goal is to analyze the labeled error data more deeply
-and find a specific cause of the problem.
-
-When an error occurs on user machine, client code automatically collects information and creates an error report. Basic report consists only of bucket identifier.
-If a solution to the problem is already known, WER provides the client with URL to the solution. If additional data is needed, WER collects a minidump (a small stack and memory
-dump and the configuration of the faulting system). If further data is required, WER can collect full memory dump, memory dumps from related programs, related files or other data
-queried from the reporting system.
-
-WER enables statistics¬based¬debugging ¬ all error data is stored in a single database so programmers can mine the database to improve debugging. Programmers can sort the buckets and debug the bucket with most report, can find a function that occurs in most buckets and debug that function. It also helps with finding causes which are not immediately
-obvious from memory dumps.
-
-Short summary of bucketing algorithms
-Algorithms are based on collection of hueristics. Expanding heuristics increase the number of buckets, condensing heuristics decrease the number of buckets. Expanding heuristics
-should not create new buckets for the same bug and condensing heuristics should not put two different bugs into one bucket.
-The idea is to classify the records as well as possible in order to save programmers time and maximize their effectiveness in debugging.
-
-Client¬Side Bucketing (Labeling)
-
-[FIG4]
-
-It is run on the client when an error report is generated. The goal is to produce an unique label based on local information that is likely to align with other reports caused by the same bug. In most cases, the only data sent to WER servers is a bucket label.
-
-Primary labeling heuristics generate a bucket label from faulting program, module and offset of the program counter within the module.
-For example, user¬mode crashed are classified according to the parameters:
-● application name
-● apllication version
-● module name
-● module version
-● offset into module
-Additional heuristics are generated for example when an error is caused by unhandled program exception.
-Most of the labeling heuristcs are expanding heuristics intended to put separate bugs into distinct buckets. For example, the hang_wait_chain (L10) heuristic walks the cain of threads
-waiting for synchronization objects held by threads, starting from the user-input thread. If a root thread is found, the error is report as a hang originating with root thread.
-
-The few condensing heuristics were derived emipirically from common cases when a single bug produced many buckets. For example, the unloaded_module (L13) heuristic condenses
-all errors where a module has been unloaded prematurely due to a reference counting bug. Server¬Side Bucketing (Classifying)
-
-[FIG5]
-
-The server¬side bucketing heuristics are codified in !analyze (an extenstion to Windows Debugger). There were about 500 heuristics dervied empirically.
-The most important classifying heuristics (C1 ¬ C5) are a part of an algorithm that analyzes the memory dump to determine which thread context and stack frame most likely caused the
-error.
-There is a number of heuristics to filter out error reports that are unlikely to be debugged (e.g bad memory, misdirected DMA, DMA from a faulty device).
-
-As an another example, kernel dumps are tagged if they contain evidence of known root kits (C11), out¬of¬date¬drivers (C12), drivers known to corrupt the kernel heap (C13) or hardware
-known to cause memory or computational erros (C14 and C15).
-
-
-## Proposed solution
-Because API implements throttles, I don't see possible use for clustering in scalable system. On the other hand, there exists data dump with number of possible applications. Given error messages and labels in Stack Exchange dump, it seems easy to validate clustering algorithms with this large amount of data. There is also place for heuristic algorithms looking for the same key words - similarly to Mateusz's approach - and apply accepted answer.
-
-Maybe there also could be question creator if error occurs often - but due to question quality restrictions and possible verification issues ([create question issues](https://api.stackexchange.com/docs/create-question)) it could only be semi-automatic and dpcs-team verified.
 
 
 System lifelong logs approach
@@ -230,6 +172,7 @@ Future experiments
 - Clustering: Usage of spectral clustering.
 - Data collection: Stack overflow crawler.
 - Data collection: https://api.stackexchange.com/docs + https://archive.org/details/stackexchange - 500 MB of AskUbuntu data.
+- Automatic traige: Automaticly opening a question on StackOverflow via https://api.stackexchange.com/docs/create-question
 
 
 Motivation and the production deployment plan
@@ -246,25 +189,28 @@ This is a significant ML application contribution, with the possibility of enabl
 
 Bibliography
 --------------------------
-[src1] http://www.psi.toronto.edu/affinitypropagation/FreyDueckScience07.pdf 
+[1] http://www.psi.toronto.edu/affinitypropagation/FreyDueckScience07.pdf 
 
-[src4] https://github.com/nvbn/thefuck
+[3] http://research.microsoft.com/apps/pubs/default.aspx?id=81176
 
-[src3] http://research.microsoft.com/apps/pubs/default.aspx?id=81176
+[4] https://github.com/nvbn/thefuck
 
-[src5] http://uu.diva-portal.org/smash/get/diva2:667650/FULLTEXT01.pdf
+[5] http://uu.diva-portal.org/smash/get/diva2:667650/FULLTEXT01.pdf
 
-[src6] https://www.youtube.com/watch?v=P-LEH-AFovE
+[6] https://www.youtube.com/watch?v=P-LEH-AFovE
 
-[src7] http://arxiv.org/pdf/1507.07998v1.pdf
+[7] http://arxiv.org/pdf/1507.07998v1.pdf
 
-[src8] https://dl.acm.org/citation.cfm?id=1148241&dl=ACM&coll=DL&CFID=759388251&CFTOKEN=72271786
+[8] https://dl.acm.org/citation.cfm?id=1148241&dl=ACM&coll=DL&CFID=759388251&CFTOKEN=72271786
 
-[src9] http://arxiv.org/pdf/1405.4053v2.pdf
+[9] http://arxiv.org/pdf/1405.4053v2.pdf
 
-[src10] http://arxiv.org/pdf/1507.07998v1.pdf
+[10] http://arxiv.org/pdf/1507.07998v1.pdf
 
-[src11] Delbert Dueck; Brendan J. Frey (2007). Non-metric affinity propagation for unsupervised image categorization. Int'l Conf. on Computer Vision.
+[11] Delbert Dueck; Brendan J. Frey (2007). Non-metric affinity propagation for unsupervised image categorization. Int'l Conf. on Computer Vision.
 
-[src12] Renchu Guan; Xiaohu Shi; Maurizio Marchese; Chen Yang; Yanchun Liang (2011). "Text Clustering with Seeds Affinity Propagation". IEEE Transactions on Knowledge & Data Engineering. 23 (4): 627–637. doi:10.1109/tkde.2010.144.
+[12] Renchu Guan; Xiaohu Shi; Maurizio Marchese; Chen Yang; Yanchun Liang (2011). "Text Clustering with Seeds Affinity Propagation". IEEE Transactions on Knowledge & Data Engineering. 23 (4): 627–637. doi:10.1109/tkde.2010.144.
 
+[13] https://access.redhat.com/articles/445443
+
+[14] TODO: Write an article about the Clicompanion problem.
